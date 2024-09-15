@@ -20,7 +20,7 @@ const main = async () => {
         console.error('Error: curl is not installed');
         process.exit(1);
     });
-    const workingDirectory = process.argv[2];
+    const workingDirectory = path_1.default.resolve(process.argv[2]);
     const files = (0, glob_1.globSync)(`${workingDirectory}/**/*.crr`);
     const results = await bluebird_1.default.map(files, async (crrFilePath) => {
         try {
