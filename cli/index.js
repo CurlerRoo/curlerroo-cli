@@ -62,7 +62,9 @@ const main = async () => {
                     });
                 }
             }
-            const outputFolder = crrFilePath.replace(workingDirectory, `${workingDirectory}/curlerroo-cli-output`);
+            const outputFolder = crrFilePath
+                .replace(workingDirectory, `${workingDirectory}/curlerroo-cli-output`)
+                .replace(/\.crr$/, '');
             const activeDocument = store.getState().activeDocument;
             if (!activeDocument) {
                 throw new Error(`Error: ${crrFilePath}: No active document`);
