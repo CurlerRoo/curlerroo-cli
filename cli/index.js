@@ -62,7 +62,7 @@ const main = async () => {
                     });
                 }
             }
-            const outputFolder = crrFilePath.replace(/\.crr$/, '.crr-output');
+            const outputFolder = crrFilePath.replace(workingDirectory, `${workingDirectory}/curlerroo-cli-output`);
             const activeDocument = store.getState().activeDocument;
             if (!activeDocument) {
                 throw new Error(`Error: ${crrFilePath}: No active document`);
@@ -106,6 +106,7 @@ const main = async () => {
     console.log('\nTotal:', results.length);
     console.log('Success:', results.filter((result) => result.success).length);
     console.log('Failed:', results.filter((result) => !result.success).length);
+    console.log('See output in:', `${workingDirectory}/curlerroo-cli-output`);
     if (results.some((result) => !result.success)) {
         console.log('Process exited with error');
         process.exit(1);
