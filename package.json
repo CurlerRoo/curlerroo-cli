@@ -4,7 +4,7 @@
   "description": "",
   "main": "cli/index.js",
   "bin": {
-    "npx-command": "cli/index.js"
+    "curlerroo-cli": "cli/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
