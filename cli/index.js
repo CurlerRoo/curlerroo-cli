@@ -15,13 +15,9 @@ const bluebird_1 = __importDefault(require("bluebird"));
 const exec_sh_1 = require("../main/lib/exec-sh");
 // get input file from command line
 const main = async () => {
-    const log = console.log;
-    const error = console.error;
-    console.log = () => { };
-    console.error = () => { };
     // check if curl is installed
     await (0, exec_sh_1.execShPromise)('curl --version', true).catch((e) => {
-        error('Error: curl is not installed');
+        console.error('Error: curl is not installed');
         process.exit(1);
     });
     const workingDirectory = process.argv[2];
@@ -32,7 +28,8 @@ const main = async () => {
             if (type !== 'valid' || !document) {
                 throw new Error(`Invalid file: ${crrFilePath}`);
             }
-            store_1.store.dispatch((0, active_document_1.setActiveDocument)({
+            const store = (0, store_1.createNewStore)();
+            store.dispatch((0, active_document_1.setActiveDocument)({
                 id: document.id,
                 shared_id: document.shared_id,
                 version: 2,
@@ -48,14 +45,14 @@ const main = async () => {
                 globalVariables: document.globalVariables,
                 activeCellIndex: 0,
             }));
-            store_1.store.dispatch((0, active_document_1.sendAllCurls)({
+            store.dispatch((0, active_document_1.sendAllCurls)({
                 selectedDirectory: workingDirectory,
             }));
             await new Promise((resolve) => {
                 setTimeout(resolve, 1000);
             });
             while (Math.random() + 2) {
-                const cells = store_1.store.getState().activeDocument?.cells;
+                const cells = store.getState().activeDocument?.cells;
                 if (cells?.every((cell) => cell.send_status !== 'sending')) {
                     break;
                 }
@@ -66,7 +63,7 @@ const main = async () => {
                 }
             }
             const outputFolder = crrFilePath.replace(/\.crr$/, '.crr-output');
-            const activeDocument = store_1.store.getState().activeDocument;
+            const activeDocument = store.getState().activeDocument;
             if (!activeDocument) {
                 throw new Error(`Error: ${crrFilePath}: No active document`);
             }
@@ -76,39 +73,44 @@ const main = async () => {
                 if (cell.send_status === 'error' ||
                     cell.pre_scripts_error ||
                     cell.post_scripts_error) {
+                    const message = `${crrFilePath}#${i}: Error: ${cell.pre_scripts_error ||
+                        cell.post_scripts_error ||
+                        cell.outputs.flatMap((output) => output.body).join('.')}`;
+                    console.log(message);
                     return {
                         success: false,
-                        message: `${crrFilePath}#${i}: Error: ${cell.pre_scripts_error ||
-                            cell.post_scripts_error ||
-                            'Unknown error'}`,
+                        message,
                     };
                 }
+                const message = `${crrFilePath}#${i}: Success`;
+                console.log(message);
                 return {
                     success: true,
-                    message: `${crrFilePath}#${i}: Success`,
+                    message,
                 };
             });
             return results;
         }
         catch (e) {
             const error = e;
+            const message = `${crrFilePath}: Error: ${error.message}`;
+            console.log(message);
             return {
                 success: false,
-                message: `${crrFilePath}: Error: ${error.message}`,
+                message,
             };
         }
-    }, { concurrency: 16 }).then((m) => m.flat());
-    results.forEach((result) => {
-        log(result.message);
-    });
-    log('\nTotal:', results.length);
-    log('Success:', results.filter((result) => result.success).length);
-    log('Failed:', results.filter((result) => !result.success).length);
+    }, {
+        concurrency: 4,
+    }).then((m) => m.flat());
+    console.log('\nTotal:', results.length);
+    console.log('Success:', results.filter((result) => result.success).length);
+    console.log('Failed:', results.filter((result) => !result.success).length);
     if (results.some((result) => !result.success)) {
-        log('Process exited with error');
+        console.log('Process exited with error');
         process.exit(1);
     }
-    log('Process exited successfully');
+    console.log('Process exited successfully');
     process.exit(0);
 };
 main();

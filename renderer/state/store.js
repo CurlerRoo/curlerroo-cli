@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.persistor = exports.store = void 0;
+exports.persistor = exports.createNewStore = exports.store = void 0;
 const toolkit_1 = require("@reduxjs/toolkit");
 const redux_persist_1 = require("redux-persist");
 const _services_1 = require("../services/services-on-cli");
@@ -54,6 +54,29 @@ exports.store = (0, toolkit_1.configureStore)({
         return middlewares;
     },
 });
+const createNewStore = () => {
+    return (0, toolkit_1.configureStore)({
+        reducer: {
+            [active_document_1.activeDocumentSlice.name]: active_document_1.activeDocumentSlice.reducer,
+            [selected_directory_1.selectedDirectorySlice.name]: persistedSelectedDirectorySliceReducer,
+            [user_1.userSlice.name]: persistedUserSliceReducer,
+            [drag_1.dragSlice.name]: drag_1.dragSlice.reducer,
+            [updates_1.updatesSlice.name]: persistedUpdatesSliceReducer,
+        },
+        middleware: (getDefaultMiddleware) => {
+            const middlewares = getDefaultMiddleware({
+                serializableCheck: false,
+            });
+            // add logger
+            middlewares.push((api) => (next) => (action) => {
+                (0, utils_1.debugLog)('dispatching', action);
+                return next(action);
+            });
+            return middlewares;
+        },
+    });
+};
+exports.createNewStore = createNewStore;
 exports.persistor = (0, redux_persist_1.persistStore)(exports.store);
 // dispatch fixSelectedSubDirectoryOrFile every 5 seconds
 // TODO: find a better way to do this
